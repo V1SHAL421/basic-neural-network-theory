@@ -22,6 +22,8 @@ this to make a model.
 """
 import numpy as np
 
+learning_rate = 0.1
+
 # Sigmoid function (An activation function): 1/(1 + e^-x)
 def nonlin(x, deriv=False):
     sig = 1 / (1 + np.exp(-x))
@@ -44,6 +46,8 @@ This is useful for debugging and testing.
 """
 np.random.seed(1)
 
+bias = np.zeros((1, 1))
+
 """The first layer of weights, Synapse 0 connecting l0 (layer 0) to (layer 1)"""
 syn0 = 2 * np.random.random((3, 1)) - 1
 
@@ -51,13 +55,17 @@ for iter in range(1000):
     
     # Forward propagation
     l0 = X
-    l1 = nonlin(np.dot(l0, syn0))
+    l1 = nonlin(np.dot(l0, syn0) + bias)
 
     # Error
     l1_error = y - l1
 
     # Delta calculated by multiplying the error by the slope of the sigmoid
     l1_delta = l1_error * nonlin(l1, deriv=True)
+
+    syn0 += learning_rate * np.dot(l0.T, l1_delta)
+
+    bias += learning_rate * np.sum(l1_delta, axis=0, keepdims=True)
 
 print(f"Output after Training: {l1}")
 
@@ -72,14 +80,17 @@ y = np.array([[0], [1], [1], [0]])
 
 np.random.seed(1)
 
+bias1 = np.zeros((1, 4))
+bias2 = np.zeros((1, 1))
+
 syn0 = 2 * np.random.random((3, 4)) - 1
 syn1 = 2 * np.random.random((4, 1)) - 1
 
 for j in range(6000):
     # Forward propagation
     l0 = X
-    l1 = nonlin(np.dot(l0, syn0))
-    l2 = nonlin(np.dot(l1, syn1))
+    l1 = nonlin(np.dot(l0, syn0) + bias1)
+    l2 = nonlin(np.dot(l1, syn1) + bias2)
 
     l2_error = y - l2
 
@@ -93,5 +104,8 @@ for j in range(6000):
 
     l1_delta = l1_error * nonlin(l1, deriv=True)
 
-    syn1 += l1.T.dot(l2_delta)
-    syn0 += l0.T.dot(l1_delta)
+    syn1 += learning_rate * l1.T.dot(l2_delta)
+    syn0 += learning_rate * l0.T.dot(l1_delta)
+
+    bias2 += learning_rate * np.sum(l2_delta, axis=0, keepdims=True)
+    bias1 += learning_rate * np.sum(l1_delta, axis=0, keepdims=True)
